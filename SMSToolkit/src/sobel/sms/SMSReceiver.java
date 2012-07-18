@@ -14,6 +14,7 @@ public class SMSReceiver extends BroadcastReceiver {
 
 		Log.d("RECEIVER", "HERE got message!");
 		Bundle bundle = intent.getExtras();
+		
 		SmsMessage message = null;
 
 		String from = null;
