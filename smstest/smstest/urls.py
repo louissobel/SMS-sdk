@@ -4,7 +4,7 @@ from django.conf.urls import patterns, include, url
 from django.contrib import admin
 admin.autodiscover()
 
-import sms
+import dj_simple_sms
 
 urlpatterns = patterns('',
     # Examples:
@@ -16,5 +16,5 @@ urlpatterns = patterns('',
 
     # Uncomment the next line to enable the admin:
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^sms/', include(sms.urls))
+    url(r'^sms/', include(dj_simple_sms.urls))
 )

@@ -58,5 +58,8 @@ def log_receive(device, sms):
 def log_error(device, message):
     message = "!! -- %s" % message
     message = termstyle.red.bold(message)
-
+    log(device, message)
+    
+def log_highlight(device, message):
+    message = termstyle.underlined.cyan.bold(message)
     log(device, message)

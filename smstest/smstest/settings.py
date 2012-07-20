@@ -114,7 +114,7 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'sms',
+    'dj_simple_sms',
     # Uncomment the next line to enable the admin:
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
@@ -122,7 +122,7 @@ INSTALLED_APPS = (
 )
 
 SMS_HANDLERS = (
-    'smstest.sample_sms_handler',
+    'dj_simple_sms.sample_sms_handler',
 )
 
 # A sample logging configuration. The only tangible logging

@@ -3,53 +3,40 @@ SMS sender emulator from terminal
 """
 
 import threading
-from SMS import SMS
+from SMS import SMS, SMSPipelineElement
 
 import os
+import logger
 
-class SMSTerminal(threading.Thread):
+class SMSTerminal(SMSPipelineElement):
+    
     
     def __init__(self):
-        threading.Thread.__init__(self)        
-        self.receive_callback = None
+        SMSPipelineElement.__init__(self, 'terminal', 'terminal')
+        logger.log(self, "terminal SMS device initialized. exit by writing DO:QUIT after 'To:'")
     
     def send(self, sms):
         """
         prints the given SMS to STDOUT
         """
-        
+        logger.log_send(self, sms)
         print sms
+                
+        
+    def listen(self):
+        print "Enter Your SMS:"
+        sms_dict = {}
+        
+        sms_dict['to_number'] = raw_input("To: ")
+        sms_dict['from_number'] = raw_input("From: ")
+        sms_dict['body'] = raw_input("Body:\n")
         
         
+        if sms_dict['to_number'] == "DO:QUIT":
+            return False
+                    
+        sms = SMS.from_dictionary(sms_dict)
         
-        
-    def receive(self, function):
-        self.receive_callback = function
-        
-        
-        
-    def run(self):
-        
-        if self.receive_callback is None:
-            raise AssertionError("Recieve callback cannot be None!")
-            
-        while True:
-            print "Enter Your SMS:"
-            sms_dict = {}
-            
-            sms_dict['to_number'] = raw_input("To: ")
-            sms_dict['from_number'] = raw_input("From: ")
-            sms_dict['body'] = raw_input("Body:\n")
-            
-            
-            if sms_dict['to_number'] == "DO:QUIT":
-                os._exit(0)
-            
-            print "sending..."
-            
-            sms = SMS.from_dictionary(sms_dict)
-            
-            print "here"
-            
-            self.receive_callback(sms)
+        logger.log_receive(self, sms)
+        self.receive_callback(sms)
             

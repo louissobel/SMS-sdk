@@ -1,9 +1,5 @@
 ## Android
 
-# built application files
-*.apk
-*.ap_
-
 # files for the dex VM
 *.dex
 
@@ -31,6 +27,10 @@ local_settings.py
 ## Python
 
 *.py[cod]
+
+
+# custom
+errresponse.html
 
 # C extensions
 *.so

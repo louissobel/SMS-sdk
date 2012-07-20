@@ -17,6 +17,15 @@ public class SMSServer extends Thread {
 
 		activity = a;
 		serverSocket = new ServerSocket(port);
+		
+		LogAction logger = new LogAction(
+				String.format(
+					"SMSServer listening on port %d",
+					port
+				),
+				activity	
+			);
+		activity.runOnUiThread(logger);
 
 	}
 
@@ -34,6 +43,17 @@ public class SMSServer extends Thread {
 				SMSRelayer relayer = new SMSRelayer(activity, connection);
 				sender.start();
 				relayer.start();
+						
+				
+				LogAction logger = new LogAction(
+					String.format(
+						"connected to %s", 
+						connection.getInetAddress().toString()
+					),
+					activity	
+				);
+				activity.runOnUiThread(logger);
+				
 				
 
 			} catch (IOException e) {

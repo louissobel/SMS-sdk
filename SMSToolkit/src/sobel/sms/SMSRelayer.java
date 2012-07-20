@@ -51,14 +51,19 @@ public class SMSRelayer extends Thread {
 			
 			if (m != null) {
 				Log.d("SMSRelayer", "Received a testmessage!");
-				activity.logReceive(m);
+				
 				out.write(m.toString());
 				
 				if (out.checkError() || socket.isClosed()) {
 					Log.d("SMSRelayer", "unable to send it! shutting down");
 					alive = false;
-					b.add(m);
-					
+					b.add(m);	
+				} else {
+					activity.runOnUiThread(new LogReceiveAction(
+							m,
+							activity
+							)
+						);
 				}
 			}
 			

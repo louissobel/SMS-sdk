@@ -4,69 +4,182 @@ from android_connect import AndroidSMS
 import logger
 
 import os
-
+import sys
 import time
+
+DJANGO_KEY = '564059f97991422aa243f257e2bf043d'
+DJANGO_URL = 'http://localhost:8000/sms/'
+
+ANDROID_PORT = 7800
+ANDROID_HOST = 'localhost'
 
 class root:
     DEVICE = 'root'
-
-def terminal_django():
-    KEY = '515503a400d24ae68242d924311cd4eb'
-    URL = 'http://localhost:8000/sms/'
-
-    webclient = WebSMSClient(URL, KEY)
-    termclient = SMSTerminal()
-
-
-    webclient.receive(termclient.send)
-    termclient.receive(webclient.send)
-
-    webclient.start()
-    termclient.start()
     
     
-def android_django():
     
-    logger.log(root, "Starting SMS pipe from Django to Android")
+def connect(*pipes):  
+    for i in range(len(pipes) - 1):        
+        pipes[i].receive(pipes[i+1].send, source=pipes[i+1].DEVICE)
+        
+def connect2(*pipes):
+    connect(*pipes)
+    connect(*pipes[::-1])
     
-    KEY = '515503a400d24ae68242d924311cd4eb'
-    URL = 'http://localhost:8000/sms/'
+def run(*pipe_templates):
     
-    PORT = 7801
+    # creating the pipes
+    pipes = []
+    for pipe_template in pipe_templates:
+        try:
+            if isinstance(pipe_template, tuple):
+                klass = pipe_template[0]
+            
+                if len(pipe_template) > 1:
+                    args = pipe_template[1]
+                else:
+                    args = ()
+            
+                if len(pipe_template) > 2:
+                    kwargs = pipe_template[2]
+                else:
+                    kwargs = {}
+                
+            else:
+                klass = pipe_template
+                args = ()
+                kwargs = {}
+        except Exception as e:
+            logger.log_error(root, "Unable to extract initialization parameters from")
+            logger.log_error(root, repr(pipe_template))
+            logger.log_error(root, "Aborting start.")
+            
+        try:
+            pipe = klass(*args, **kwargs)
+        except Exception as e:
+            logger.log_error(root, "Error initializing %s with args %s and kwargs %s"
+                % (repr(klass), repr(args), repr(kwargs))
+            )
+            logger.log_error(root, repr(e))
+            logger.log_error(root, "Aborting start and shutting down")
+            cleanup_and_quit(*pipes)
+        
+        pipes.append(pipe)
+    
+    connect2(*pipes)
+    
+    for pipe in pipes:
+        try:
+            pipe.start()
+            logger.log(root, "started device %s" % pipe.DEVICE)
+        except Exception as e:
+            logger.log_error(root, "unable to start %s:" % pipe.DEVICE)
+            logger.log_error(root, e.message)
+            logger.log_error(root, "shutting down.")
+            cleanup_and_quit(*pipes)
+        
 
-    webclient = WebSMSClient(URL, KEY)
-    androidclient = AndroidSMS(PORT)
 
-    webclient.receive(androidclient.send, source='android')
-    androidclient.receive(webclient.send, source='django')
-
-    webclient.start()
-    androidclient.start()
-    
     try:
         while True:
-            time.sleep(100) #waiting...
+            for pipe in pipes:
+                pipe.join(.2)
+                if not pipe.isAlive():
+                    logger.log_error(root, "%s has terminated - shutting down" % pipe.DEVICE)
+                    cleanup_and_quit(*pipes)
     except KeyboardInterrupt:
         logger.log_error(root, "KeyboardInterrupt - shutting down")
-        os._exit(0)
+        cleanup_and_quit(*pipes)
+        
+def cleanup_and_quit(*pipes):
+    for pipe in pipes:
+        try:
+            pipe.cleanup()
+        except Exception as e:
+            logger.log_error(root, "Error while shutting %s - %s" % (pipe.DEVICE, e.message))
     
+    logger.log_highlight(root, "bye")
+    os._exit(0)
     
+
+def terminal_django():
+
+    logger.log_highlight(root, "Starting SMS pipe from Terminal to Django")
+
+    run(
+        (WebSMSClient, (DJANGO_URL, DJANGO_KEY)),
+        SMSTerminal,
+    )
+
+      
+def android_django():
     
+    logger.log_highlight(root, "Starting SMS pipe from Django to Android")
     
-def terminal_android():
+    run(
+        (WebSMSClient, (DJANGO_URL, DJANGO_KEY)),
+        (AndroidSMS, (ANDROID_HOST, ANDROID_PORT)),
+    )
     
-    termclient = SMSTerminal()
-    androidclient = AndroidSMS(7801)
+
     
-    
-    termclient.receive(androidclient.send)
-    androidclient.receive(termclient.send)
-    
-    androidclient.start()
-    termclient.start()
+def android_terminal():
+  
+    logger.log_highlight(root, "Starting SMS pipe from Terminal to Android")
+      
+    run(
+        SMSTerminal,
+        (AndroidSMS, (ANDROID_HOST, ANDROID_PORT)),
+    )
     
     
 if __name__ == "__main__":
-    android_django()
+    
+    def badargs():
+        logger.log(root, "Bad Command Line Arguments! Try `python main.py help`")
+        sys.exit(1)
+        
+    def print_help_and_exit():
+        print """
+Usage:
+python main.py help
+    - shows this message
+python main.py terminal django
+    - creates a 2-way SMS connection between your terminal and a django app
+python main.py android terminal
+    - creates a 2-way SMS connection between an android device and your terminal
+python main.py android django
+    - creates a 2-way SMS connection between an android device and a django app
+"""
+        sys.exit(1)
+
+    if len(sys.argv) < 3:
+        
+        try:
+            if sys.argv[1] == "help":
+                print_help_and_exit()
+            else:
+                badargs()
+        except IndexError:
+            badargs()
+        
+        badargs()
+        
+    
+    first = sys.argv[1]
+    second = sys.argv[2]
+    
+    function_name = "%s_%s" % (first, second)
+
+    function = locals().get(function_name)
+    
+    if function is None:
+        badargs()     
+    else:
+        function()
+        
+    
+        
+    
     
     

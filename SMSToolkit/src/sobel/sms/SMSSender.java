@@ -5,8 +5,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
 
-import android.app.PendingIntent;
-import android.content.Intent;
 import android.telephony.SmsManager;
 import android.util.Log;
 
@@ -40,7 +38,13 @@ public class SMSSender extends Thread {
 
 				try {
 					smsManager.sendTextMessage(message.to, null, message.getBody(), null, null);
-					activity.logSend(message);
+					
+					activity.runOnUiThread(new LogSendAction(
+						message,
+						activity
+						)
+					);
+					
 				} catch (Exception e) {
 					//TODO
 					//Error sending the SMS!!!
@@ -51,6 +55,14 @@ public class SMSSender extends Thread {
 			//here, I should close the connection ASAP
 			socket.close();
 			
+			//and lets log it
+			activity.runOnUiThread(new LogAction(
+				String.format(
+					"closed connection from %s",
+					socket.getInetAddress().toString()
+				),
+				activity
+			));
 
 		} catch (IOException e) {
 			// TODO

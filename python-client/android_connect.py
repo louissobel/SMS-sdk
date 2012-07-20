@@ -7,64 +7,59 @@ import asynchat
 import StringIO
 
 import logger
-from SMS import SMS
+from SMS import SMS, SMSPipelineElement
 
-class AndroidSMS(threading.Thread):
+class AndroidSMS(SMSPipelineElement):
+        
     
-    DEVICE = 'android connector'
-    
-    HOST = 'localhost'
-    
-    def __init__(self, port):
-        threading.Thread.__init__(self)
+    def __init__(self, host, port):
+        
+        SMSPipelineElement.__init__(self, 'android connector', 'android device')
         self.port = port
-        self.receive_callback = None
+        self.host  = host
         
         #lets try to connect
         android_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        android_socket.connect((self.HOST,port))
-        
-        logger.log(self, "connected to android device on port %d" % port)
-        self.source = None
-        self.sink = 'android device'
+        android_socket.connect((self.host, self.port))      
+        logger.log(self, "connected to android device on on host %s port %d" % (host, port))
         
         self.out_ = android_socket.makefile(mode = 'w')
         self.in_ = android_socket.makefile()
-        self.socket_ = android_socket       
+        self.socket_ = android_socket
+        self.closed = False
+        
+        self.text_parser = TextParser(self.in_)       
     
-    def send(self, sms):
-        logger.log_send(self, sms)
-        
-        self.out_.write(str(sms))
-        self.out_.flush()        
-        
-    def receive(self, function, source=None):
-        self.receive_callback = function
-        self.source = source
-        return self
+    def send(self, sms):        
+        try:
+            self.out_.write(str(sms))
+            self.out_.flush()
+        except socket.error as e:
+            logger.log_error(self, "Error writing to android socket")
+        else:
+            logger.log_send(self, sms)
     
-    def run(self):
-        if self.receive_callback is None:
-            # then im not part of an upstream pipeline
-            return
-            
-        #ok! so I listen for a message
-        text_parser = TextParser(self.in_)
+    def listen(self): 
+        try:
+            sms = self.text_parser.one()
+        except RuntimeError as e:
+            logger.log_error(self, e.message)
+            return False
+                    
+        if sms is None:
+            logger.log_error(self, "Connection to android device is broken")
+            logger.log_error(self, "Exiting read loop, closing socket")
+            self.cleanup()
+            return False
         
-        while True:
-            
-            try:
-                sms = text_parser.one()
-            except RuntimeError as e:
-                logger.log_error(self, e.message)
-                return
-                
-            
-            if sms is None:
-                break
-            
-            logger.log_receive(self, sms)
-            self.receive_callback(sms)
+        logger.log_receive(self, sms)
+        self.receive_callback(sms)
+        
+    def cleanup(self):
+        if not self.closed:
+            self.socket_.shutdown(socket.SHUT_RDWR)
+            self.socket_.close()
+            self.closed = True
             
             
 class TextParser:
@@ -81,9 +76,8 @@ class TextParser:
         copied from java :/
         """
         state = "waiting"
-
+        
         length = 0;
-
         bodyLinesRemaining = 0;
 
         to_ = ""
@@ -118,7 +112,6 @@ class TextParser:
             elif state == "headers":
 
                 headerMatch = self.headerParser.match(line)
-
                 if headerMatch:
                     key = headerMatch.group(1)
                     value = headerMatch.group(2)
@@ -150,7 +143,6 @@ class TextParser:
                     # then we have slurped up all the body that we need to
                     return SMS(to_, from_, body);
             
-
             else:
                 raise RuntimeError("Invalid state in message parser: %s" % state)
     

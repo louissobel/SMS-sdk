@@ -59,12 +59,16 @@ def sms(request):
         # call the handlers? is this the best way?
         for sms_handler in sms_handlers:
             retval = sms_handler(new_sms)
-            if retval:
+            if retval is False:
                 break
                 
         return HttpResponse()
         
     elif request.method == "GET":
+        """
+        Remove this section if you will not be using
+        The database as a queue for SMS sending-consumers
+        """
         
         
         device = authorize(request.GET.get('key'))
@@ -78,7 +82,6 @@ def sms(request):
             sms_set = SMS.objects.all().order_by('datetime')
         else:
             sms_set = SMS.objects.all().order_by('datetime')[:max_sms]
-            
 
             
         sms_list = list(sms_set.values(*attrs))

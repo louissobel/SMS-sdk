@@ -12,6 +12,8 @@ import android.widget.TextView;
 public class SMSToolkitActivity extends Activity {
 	/** Called when the activity is first created. */
 
+	private static final int PORT = 7800;
+	
 	private static final String TAG = "SMSToolkit";
 
 	private TextView logText;
@@ -22,14 +24,17 @@ public class SMSToolkitActivity extends Activity {
 		setContentView(R.layout.main);
 
 		logText = (TextView) findViewById(R.id.log);
-		log("HELLO");
-		log("whatsup");
+		logText.setMaxLines(Integer.MAX_VALUE);
+		
+		log("SMS Toolkit initialized OK");
+
 		
 		SMSServer server = null;
 		try {
-			server = new SMSServer(this, 7801);
+			server = new SMSServer(this, PORT);
 			Log.d(TAG, "Server created OK");
 		} catch (IOException e) {
+			e.printStackTrace();
 			Log.e(TAG, "Error creating server");
 		}
 

@@ -13,6 +13,9 @@ class SMS(models.Model):
     datetime = models.DateTimeField(auto_now_add=True)
 
     def send(self):
+        """
+        Change this to use another method or api for sending an SMS
+        """
         self.save()
         
         

@@ -1,4 +1,6 @@
 
+import threading
+
 class SMS:
     
     @staticmethod
@@ -63,3 +65,41 @@ class SMS:
         out += "\n%s" % body #not self.body beacause we transform it
         
         return out
+        
+        
+class SMSPipelineElement(threading.Thread):
+
+    def __init__(self,device,sink):
+        threading.Thread.__init__(self)
+        self.DEVICE = device
+
+        self.source = None
+        self.sink = sink
+
+        self.receive_callback = None
+
+    def send(self, sms):
+        raise NotImplementedError
+
+    def listen(self):
+        raise NotImplementedError
+
+    def receive(self, function, source=None):
+        self.receive_callback = function
+        self.source = source
+        return self
+
+    def run(self):
+
+        if self.receive_callback is None:
+            ### then i'm not part of an upstream pipeline
+            return
+
+        while True:
+            retval = self.listen()
+            
+            if retval is False:
+                break
+                
+    def cleanup(self):
+        pass
