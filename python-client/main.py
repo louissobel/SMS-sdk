@@ -26,7 +26,7 @@ def connect2(*pipes):
     connect(*pipes)
     connect(*pipes[::-1])
     
-def run(*pipe_templates):
+def run(pipe_templates, connector):
     
     # creating the pipes
     pipes = []
@@ -66,7 +66,7 @@ def run(*pipe_templates):
         
         pipes.append(pipe)
     
-    connect2(*pipes)
+    connector(*pipes)
     
     for pipe in pipes:
         try:
@@ -84,7 +84,7 @@ def run(*pipe_templates):
         while True:
             for pipe in pipes:
                 pipe.join(.2)
-                if not pipe.isAlive():
+                if not pipe.isAlive() and pipe.upstream:
                     logger.log_error(root, "%s has terminated - shutting down" % pipe.DEVICE)
                     cleanup_and_quit(*pipes)
     except KeyboardInterrupt:
@@ -100,39 +100,14 @@ def cleanup_and_quit(*pipes):
     
     logger.log_highlight(root, "bye")
     os._exit(0)
-    
 
-def terminal_django():
 
-    logger.log_highlight(root, "Starting SMS pipe from Terminal to Django")
+pipe_templates = {
+    'terminal' : SMSTerminal,
+    'django'   : (WebSMSClient, (DJANGO_URL, DJANGO_KEY)),
+    'android'  : (AndroidSMS, (ANDROID_HOST, ANDROID_PORT)),
+}
 
-    run(
-        (WebSMSClient, (DJANGO_URL, DJANGO_KEY)),
-        SMSTerminal,
-    )
-
-      
-def android_django():
-    
-    logger.log_highlight(root, "Starting SMS pipe from Django to Android")
-    
-    run(
-        (WebSMSClient, (DJANGO_URL, DJANGO_KEY)),
-        (AndroidSMS, (ANDROID_HOST, ANDROID_PORT)),
-    )
-    
-
-    
-def android_terminal():
-  
-    logger.log_highlight(root, "Starting SMS pipe from Terminal to Android")
-      
-    run(
-        SMSTerminal,
-        (AndroidSMS, (ANDROID_HOST, ANDROID_PORT)),
-    )
-    
-    
 if __name__ == "__main__":
     
     def badargs():
@@ -152,31 +127,30 @@ python main.py android django
     - creates a 2-way SMS connection between an android device and a django app
 """
         sys.exit(1)
-
-    if len(sys.argv) < 3:
         
-        try:
-            if sys.argv[1] == "help":
-                print_help_and_exit()
-            else:
-                badargs()
-        except IndexError:
-            badargs()
-        
+    
+    start = 1
+    connector = connect2
+    
+    if len(sys.argv) < 2:
         badargs()
+    
+         
+    if sys.argv[1] == "help" or sys.argv[1] == "h":
+        print_help_and_exit()
+        
+    if sys.argv[1] == "oneway":
+        connector = connect
+        if len(sys.argv) < 3:
+            badargs()
+        start = 2
         
     
-    first = sys.argv[1]
-    second = sys.argv[2]
+    this_run_pipe_templates = [pipe_templates.get(k.lower()) for k in [sys.argv[i] for i in range(start,len(sys.argv))]]
+    if not all(this_run_pipe_templates):
+        badargs()
     
-    function_name = "%s_%s" % (first, second)
-
-    function = locals().get(function_name)
-    
-    if function is None:
-        badargs()     
-    else:
-        function()
+    run(this_run_pipe_templates, connector)
         
     
         

@@ -77,6 +77,7 @@ class SMSPipelineElement(threading.Thread):
         self.sink = sink
 
         self.receive_callback = None
+        self.upstream = False
 
     def send(self, sms):
         raise NotImplementedError
@@ -87,11 +88,12 @@ class SMSPipelineElement(threading.Thread):
     def receive(self, function, source=None):
         self.receive_callback = function
         self.source = source
+        self.upstream = True
         return self
 
     def run(self):
 
-        if self.receive_callback is None:
+        if not self.upstream:
             ### then i'm not part of an upstream pipeline
             return
 
