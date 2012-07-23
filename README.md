@@ -9,13 +9,7 @@ To use (after cloning)
 
 __Installing on Django__
 
- 1. From within the repository, type `sudo python setup.py install`. This will install the sms app.
- 2. In your django requirements.txt file, add the line
-    
-    `-e git+http://github.com/louissobel/SMS-sdk.git#egg=dj_simple_sms`
-
-    This will allow your heroku site to also use this app.
- 3. Now go to the folder containing your django app.
+ 1. Copy and paste the dj\_simple\_sms folder into your django project
  3. In the `INSTALLED_APPS` section of your settings.py file, add `'dj_simple_sms'`
  4. At the top of your main urls.py file, add `import dj_simple_sms`
  5. In your main urls.py file, add the urlpattern `url(r'^sms/', include(dj_simple_sms.urls))`
