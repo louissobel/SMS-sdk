@@ -43,3 +43,29 @@ __Using on Django__
  7. Hooray! To now, to use your own SMS\_HANDLER function, add it to the SMS\_HANDLERS tuple.
  8. To quit the `main.py` program, hit `Ctrl-C`
 
+
+__Installing for Android__
+
+ 1. Download and install the Android SDK for your system. Note that it is not necessary for you to install any libraries,
+    what is important is the Android Debug Bridge (adb) program that comes with the SDK.
+ 2. Plug in the working android phone to your computer using a USB connector.
+ 3. Go to the folder '.../platform-tools' that contains the adb program.
+ 4. Run `adb install -d /PATH/TO/sms_sdk/SMSToolkit.apk` (where `/PATH/TO` is the path to the folder holding the sms_sdk folder)
+    This will install the toolkit software on the android device.
+
+__Using on Android__
+
+ 1. Make sure that the Android device is plugged in and is turned on.
+ 2. Go to the folder containing the `adb` command and run `adb -d forward tcp:7800 tcp:7800`. This sets up your computer to forward
+    all communication on port 7800 of your computer to port 7800 of the android device.
+ 3. On the android device, start the SMSToolkit program. Don't quit it, or you will have to manually shut it down to start a new one.
+ 4. Go to the `python-client` folder, and run `python main.py android terminal`.
+ 5. If there are no error messages, try sending a SMS from the terminal to your own phone number. Then try sending one back. Hooray!
+ 6. To quit the main program, press `Ctl-C`
+
+__Using with Django and Android__
+
+ 1. Follow the steps in `Using on Django` and `Using on Android` but just don't run the main program.
+ 2. Then, run `python main.py android django` and you can now send and receive messages in your Django app to and from any phone number.
+ 
+
