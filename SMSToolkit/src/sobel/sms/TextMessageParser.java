@@ -101,13 +101,8 @@ public class TextMessageParser {
 
 				} else if (input.equals("")) {
 					// then we are done with headers
-					if (length == 0) {
-						body = "";
-						return new TextMessage(to, from, body);
-					} else {
 						state = "body";
 						bodyLinesRemaining = length;
-					}
 				} else {
 					// then this was in invalid line for header mode
 					throw new RuntimeException(String.format(
@@ -120,7 +115,9 @@ public class TextMessageParser {
 				if (bodyLinesRemaining == 0) {
 					// then we have slurped up all the body that we need to
 					body = bodyBuilder.toString();
-					return new TextMessage(to, from, body);
+					TextMessage out =  new TextMessage(to, from, body);
+					out.trim();
+					return out;
 				}
 
 			} else {

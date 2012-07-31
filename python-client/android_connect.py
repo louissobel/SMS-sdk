@@ -125,9 +125,6 @@ class TextParser:
                     
                 elif line == "":
                     # then we are done with headers!
-                    if length == 0:
-                        return SMS(to_, from_, body)
-                    else:
                         state = "body"
                         bodyLinesRemaining = length
                 
@@ -141,7 +138,9 @@ class TextParser:
 
                 if bodyLinesRemaining == 0:
                     # then we have slurped up all the body that we need to
-                    return SMS(to_, from_, body)
+                    out = SMS(to_, from_, body)
+                    out.trim()
+                    return out
             
             else:
                 raise RuntimeError("Invalid state in message parser: %s" % state)

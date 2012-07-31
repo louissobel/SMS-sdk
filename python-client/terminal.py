@@ -20,9 +20,9 @@ class SMSTerminal(SMSPipelineElement):
         prints the given SMS to STDOUT
         """
         logger.log_send(self, sms)
-        print sms
-                
         
+        print '---------------\n'+str(sms)+'----------'
+                
     def listen(self):
         print "Enter Your SMS:"
         sms_dict = {}

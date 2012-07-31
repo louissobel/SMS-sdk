@@ -40,21 +40,15 @@ public class TextMessage {
 		}
 	}
 
+	public void trim() {
+		body = body.substring(0, body.length() - 1);
+	}
 	
 	public String getBody() {
 		//returns the body but with a trailing newline, if any, removed;
 		//no, thats not true - we have to add a '\n' if its empty!
-		int len = body.length();
-		
-		if (len == 0) {
-			return "\n";
-		} else {
-			if (body.charAt(len - 1) == '\n') {
-				return body.substring(0, len - 1);
-			} else {
-				return body;
-			}
-		}
+		//no we don't!		
+		return body;
 	}
 
 
@@ -64,30 +58,16 @@ public class TextMessage {
 		StringBuilder b = new StringBuilder();
 
 		int length = 0;
-
-		int len = body.length();
-			
-		if (len == 0) {
-			body = "\n";
-			length = 1;
-		} else {
-			if (body.charAt(len - 1) != '\n') {
-				body = body + '\n';
-				len++;
+		
+		String outBody = body + '\n';
+		int len = outBody.length();
+		
+		for (int pos = 0; pos < len; pos++) {
+			char c = outBody.charAt(pos);
+			if (c == '\n') {
+				length++;
 			}
-			for (int pos = 0; pos < len; pos++) {
-				char c = body.charAt(pos);
-				if (c == '\r') {
-					length++;
-					if (pos + 1 < len && body.charAt(pos + 1) == '\n') {
-						pos++;
-					}
-				} else if (c == '\n') {
-					length++;
-				}
-			}
-		}
-
+		}		
 
 
 		b.append("TEXT\n");
@@ -99,7 +79,7 @@ public class TextMessage {
 
 		b.append("\n"); // end headers
 
-		b.append(body);
+		b.append(outBody);
 
 		return b.toString();
 	}
