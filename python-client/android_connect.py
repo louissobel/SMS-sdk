@@ -128,7 +128,7 @@ class TextParser:
                     if length == 0:
                         return SMS(to_, from_, body)
                     else:
-                        state = "body";
+                        state = "body"
                         bodyLinesRemaining = length
                 
                 else:
@@ -141,7 +141,7 @@ class TextParser:
 
                 if bodyLinesRemaining == 0:
                     # then we have slurped up all the body that we need to
-                    return SMS(to_, from_, body);
+                    return SMS(to_, from_, body)
             
             else:
                 raise RuntimeError("Invalid state in message parser: %s" % state)

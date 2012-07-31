@@ -69,6 +69,7 @@ public class TextMessage {
 			
 		if (len == 0) {
 			body = "\n";
+			length = 1;
 		} else {
 			if (body.charAt(len - 1) != '\n') {
 				body = body + '\n';

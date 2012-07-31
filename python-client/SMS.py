@@ -14,7 +14,7 @@ class SMS:
     def __init__(self, to_number, from_number, body):
         self.to_number = to_number
         self.from_number = from_number
-        self.body = body
+        self.body = body if not body == '\n' else ''
         
         
     def short_body(self, max_length=15):
@@ -36,6 +36,7 @@ class SMS:
         
         if body_length == 0:
             body = "\n"
+            length = 1
         else:
             if body[body_length - 1] != '\n':
                 body += '\n'
