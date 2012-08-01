@@ -1,3 +1,10 @@
+"""
+__init__ for dj_simple_sms
+
+This module also imports and creates the sender object
+that will be used to send an SMS
+"""
+
 import util
 import senders
 
@@ -9,7 +16,7 @@ if _sms_sender_path is None:
     # default to senders.DjangoQueueSMSSender
     SMS_SENDER = senders.DjangoQueueSMSSender()
 else:
-    SMS_SENDER = util.get_class(_sms_sender_path)
+    SMS_SENDER = util.get_class(_sms_sender_path)()
     
 import urls
 import models

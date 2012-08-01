@@ -1,6 +1,9 @@
 """
 This module contains the interface for an SMS sending method
 as well as the default one
+
+This is a point where the app can easily be extended to use a different
+way of sending an SMS
 """
 import json
 

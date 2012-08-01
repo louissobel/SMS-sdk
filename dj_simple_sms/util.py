@@ -1,21 +1,27 @@
+"""
+Implements some utility stuff
+for authorization and dynamic importing stuff
 
+I wish I didn't have to do this importing myself
+"""
 from django.utils.importlib import import_module
+
 from models import Device
 
 def authorize(key):
-    
+    """
+    Checks if the key is registered with a device
+    """
     try:
         return Device.objects.get(key=key)
     except Device.DoesNotExist:
         return None
 
-
-
 def get_callable(lookup_string):
     """
     Convert a string version of a function name to the callable object.
     
-    again, copy and pasted from url resolving
+    copy and pasted from django url resolving
     """
     mod_name, func_name = get_mod_func(lookup_string)
 
@@ -27,15 +33,13 @@ def get_callable(lookup_string):
 
     return function
 
-
-
-
 def get_mod_func(callback):
     """
     Copy and pasted from url resolving
+    
+    Converts 'django.views.news.stories.story_detail' to
+    ['django.views.news.stories', 'story_detail']
     """
-    # Converts 'django.views.news.stories.story_detail' to
-    # ['django.views.news.stories', 'story_detail']
     try:
         dot = callback.rindex('.')
     except ValueError:
@@ -45,7 +49,9 @@ def get_mod_func(callback):
 
 def get_class(path): 
     """
-    Copy and pasted from middleware resolving
+    Copy and pasted from middleware resolving,
+    
+    pulls out and imports the given class
     """
     try:
         module, classname = path.rsplit('.', 1)

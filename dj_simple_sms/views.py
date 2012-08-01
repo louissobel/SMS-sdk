@@ -1,15 +1,13 @@
-# Create your views here.
+"""
+
+"""
 
 from django.http import *
 from django.views.decorators.csrf import csrf_exempt
-
 from models import SMS, Device
 from util import authorize, get_callable
-
 import json
-
 from django.conf import settings
-
 import dj_simple_sms
 
 
@@ -33,20 +31,19 @@ def sms(request):
     attrs = ('to_number','from_number','body')
     
     if request.method == "POST":
-        
+        """
+        Handles an incoming SMS
+        """
         device = authorize(request.POST.get('key'))
         if device is None:
-            return HttpResponseForbidden()
+            return HttpResponseForbidden(str(device))
         
         sms_dict = {}
         for attr in attrs:
-            
             post_val = request.POST.get(attr)
             if post_val is None:
                 return HttpResponseBadRequest("POST must have attribute %s" % attr)
-            
             sms_dict[attr] = post_val
-        
         new_sms = SMS(**sms_dict)
         
         sms_handlers = []
