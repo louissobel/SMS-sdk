@@ -1,6 +1,6 @@
-from web import WebSMSClient
-from terminal import SMSTerminal
-from android_connect import AndroidSMS
+from web_connector import WebConnector
+from terminal import Terminal
+from android_connector import AndroidConnector
 import logger
 
 import os
@@ -14,27 +14,49 @@ ANDROID_PORT = 7800
 ANDROID_HOST = 'localhost'
 
 class root:
+    """
+    A class for the sake of the logger
+    """
     DEVICE = 'root'
     
     
     
-def connect(*pipes):  
+def connect(*pipes):
+    """
+    For each (except the last one), this function
+    sets the its receive callback to be the send
+    method of the next element in the pipline.
+    
+    This effectively "connects them"
+    
+    Arguments are the SMSPipelineElements to connect
+    """
     for i in range(len(pipes) - 1):        
         pipes[i].receive(pipes[i+1].send, source=pipes[i+1].DEVICE)
         
 def connect2(*pipes):
+    """
+    Calls connect on the pipes in both directions,
+    creating a bi-directional pipeline
+    
+    Arguments are the SMSPipelineElements to connect
+    """
+    
     connect(*pipes)
     connect(*pipes[::-1])
     
 def run(pipe_templates, connector):
+    """
+    This is the ma
+    """
     
-    # creating the pipes
+    # creating the pipes from the templates passed in
     pipes = []
     for pipe_template in pipe_templates:
         try:
             if isinstance(pipe_template, tuple):
                 klass = pipe_template[0]
-            
+                
                 if len(pipe_template) > 1:
                     args = pipe_template[1]
                 else:
@@ -43,8 +65,7 @@ def run(pipe_templates, connector):
                 if len(pipe_template) > 2:
                     kwargs = pipe_template[2]
                 else:
-                    kwargs = {}
-                
+                    kwargs = {}              
             else:
                 klass = pipe_template
                 args = ()
@@ -66,6 +87,9 @@ def run(pipe_templates, connector):
         
         pipes.append(pipe)
     
+    # run the connection function,
+    # connecting the different pipeline
+    # elements together
     connector(*pipes)
     
     for pipe in pipes:
@@ -78,8 +102,6 @@ def run(pipe_templates, connector):
             logger.log_error(root, "shutting down.")
             cleanup_and_quit(*pipes)
         
-
-
     try:
         while True:
             for pipe in pipes:
@@ -103,9 +125,9 @@ def cleanup_and_quit(*pipes):
 
 
 pipe_templates = {
-    'terminal' : SMSTerminal,
-    'django'   : (WebSMSClient, (DJANGO_URL, DJANGO_KEY)),
-    'android'  : (AndroidSMS, (ANDROID_HOST, ANDROID_PORT)),
+    'terminal' : Terminal,
+    'django'   : (WebConnector, (DJANGO_URL, DJANGO_KEY)),
+    'android'  : (AndroidConnector, (ANDROID_HOST, ANDROID_PORT)),
 }
 
 if __name__ == "__main__":
@@ -117,8 +139,14 @@ if __name__ == "__main__":
     def print_help_and_exit():
         print """
 Usage:
+python main.py [oneway] [terminal|android|django]+
+    - creates a SMS pipeline from left to right.
+      If oneway is not specified, will also create
+      the pipeline from right to left.
 python main.py help
     - shows this message
+
+Examples:
 python main.py terminal django
     - creates a 2-way SMS connection between your terminal and a django app
 python main.py android terminal

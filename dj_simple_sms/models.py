@@ -2,6 +2,8 @@ from django.db import models
 
 from django.contrib import admin
 
+import dj_simple_sms
+
 import uuid
 
 class SMS(models.Model):
@@ -13,12 +15,8 @@ class SMS(models.Model):
     datetime = models.DateTimeField(auto_now_add=True)
 
     def send(self):
-        """
-        Change this to use another method or api for sending an SMS
-        """
-        self.save()
-        
-        
+        dj_simple.sms.SMS_SENDER.send(self)
+              
     def to_message(self):
         return "To: %s\nFrom: %s\nBody:\n%s" % (self.to_number, self.from_number, self.body)
     

@@ -41,3 +41,17 @@ def get_mod_func(callback):
     except ValueError:
         return callback, ''
     return callback[:dot], callback[dot+1:]
+    
+
+def get_class(path): 
+    """
+    Copy and pasted from middleware resolving
+    """
+    try:
+        module, classname = path.rsplit('.', 1)
+        mod = import_module(module)
+        klass = getattr(mod, mw_classname)
+    except:
+        raise ValueError("Error finding SMS sender class: %s" % path)
+        
+    return klass

@@ -1,65 +1,70 @@
 from termstyle import termstyle
 import datetime
 
-color_order = [
+_color_order = [
     'blue',
     'green',
     'cyan',
     'yellow',
 ]
 
-
-device_stylehash = {
+_device_stylehash = {
     'root' : termstyle.magenta,
 }
 
-
 def timestamp():
+    """Returns a timestamp"""
     return datetime.datetime.today().strftime("%m-%d-%Y %H:%M:%S")
     
 def get_device_style(device):
-    global color_order # :(
+    """
+    Used to have a consistent color per device
+    Mutates the module globals _color_order
+    and _device_stylehash.    
+    """
     
-    if device.DEVICE in device_stylehash:
-        style = device_stylehash[device.DEVICE]
-        
+    if device.DEVICE in _device_stylehash:
+        style = _device_stylehash[device.DEVICE]    
     else:
-        if color_order:
-            new_color = color_order[0]
-            color_order = color_order[1:]
+        if _color_order:
+            new_color = _color_order.pop(0)
         else:
-            raise RuntimeError("Out of colors!")
-        
+            raise RuntimeError("Logger out of colors!")
         style = getattr(termstyle, new_color)
-        device_stylehash[device.DEVICE] = style
+        _device_stylehash[device.DEVICE] = style
         
     return style
     
 def get_source(device):
+    """
+    Common code for getting the 'source' attribute
+    of a SMSPipelineElement device
+    """
     source = getattr(device, 'source')
     return 'from %s' % source if source else ''
     
-
-    
-
 def log(device, message):
+    """Outputs the message with the logger style"""
     style = get_device_style(device)        
     print "[%s] - [%s]: %s" % (timestamp(), style(device.DEVICE), message)
-    
-    
+        
 def log_send(device, sms):
+    """Turns a sent sms into a logmessage and logs it"""
     message = "Sent %s %s to %s" % (repr(sms), get_source(device), device.sink)
     log(device, message)
     
 def log_receive(device, sms):
+    """Turns a received sms into a logmessage and logs it"""
     message = "Received %s from %s" % (repr(sms), device.sink)
     log(device, message)
     
 def log_error(device, message):
+    """Styles a error message and logs it"""
     message = "!! -- %s" % message
     message = termstyle.red.bold(message)
     log(device, message)
     
 def log_highlight(device, message):
+    """Styles a highlight message and logs it"""
     message = termstyle.underlined.cyan.bold(message)
     log(device, message)

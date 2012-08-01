@@ -8,10 +8,19 @@ from SMS import SMS, SMSPipelineElement
 import os
 import logger
 
-class SMSTerminal(SMSPipelineElement):
+class Terminal(SMSPipelineElement):
+    """
+    A class that uses STDIN and STDOUT to send and receive SMSs
     
+    Initalization does nothing.
+    
+    Send simply prints the SMS to stdout
+    
+    Listen waits on STDIN for user input for one text message
+    """
     
     def __init__(self):
+        """Initalizes the Element"""
         SMSPipelineElement.__init__(self, 'terminal', 'terminal')
         logger.log(self, "terminal SMS device initialized. exit by writing DO:QUIT after 'To:'")
     
@@ -21,9 +30,15 @@ class SMSTerminal(SMSPipelineElement):
         """
         logger.log_send(self, sms)
         
-        print '---------------\n'+str(sms)+'----------'
+        print '-------------\n'+str(sms)+'-------------'
                 
     def listen(self):
+        """
+        Used STDIN and STDOUT to get string values for the to,
+        from, and body attributes of the sms to build.
+        
+        Will return False if the To parameter is 'DO:QUIT'
+        """
         print "Enter Your SMS:"
         sms_dict = {}
         

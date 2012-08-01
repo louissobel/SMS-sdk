@@ -1,6 +1,6 @@
 # Create your views here.
 
-from django.http import HttpResponseBadRequest, HttpResponseForbidden, HttpResponse
+from django.http import *
 from django.views.decorators.csrf import csrf_exempt
 
 from models import SMS, Device
@@ -10,15 +10,13 @@ import json
 
 from django.conf import settings
 
-
-
-
+import dj_simple_sms
 
 
 @csrf_exempt
 def sms(request):
     """
-    Handles both the get and the post
+    Handles both the GET and the POST
     
     first thing is checks to make sure that the incoming message
     has the right secret device key
@@ -68,32 +66,16 @@ def sms(request):
         """
         Remove this section if you will not be using
         The database as a queue for SMS sending-consumers
-        """
-        
-        
+        """        
         device = authorize(request.GET.get('key'))
         if device is None:
-            return HttpResponseForbidden()
+            return HttpResponseForbidden(str(device))
         
-        max_sms = request.GET.get('max_sms',getattr(settings,'SMS_MAX_SMS_GET',10))
+        try:
+            return dj_simple_sms.SMS_SENDER.respond_to_get(request)
+        except NotImplementedError:
+            return HttpResponseNotAllowed('GET')
         
-        # ok, get that many!
-        if max_sms is None:
-            sms_set = SMS.objects.all().order_by('datetime')
-        else:
-            sms_set = SMS.objects.all().order_by('datetime')[:max_sms]
-
-            
-        sms_list = list(sms_set.values(*attrs))
-        
-        count = len(sms_list)
-        
-        data_out = {'sms_count':count,'sms':sms_list}
-        
-        for sms in sms_set:
-            sms.delete()
-        
-        return HttpResponse(json.dumps(data_out))
         
         
 
